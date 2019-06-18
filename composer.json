@@ -1,7 +1,7 @@
 {
-    "name": "omnipay/multisafepay",
+    "name": "slicklabs/omnipay-multisafepay",
     "type": "library",
-    "description": "MultiSafepay driver for the Omnipay payment processing library",
+    "description": "MultiSafepay driver for the Omnipay payment processing library with added Afterpay support",
     "keywords": [
         "gateway",
         "merchant",
@@ -11,7 +11,7 @@
         "pay",
         "payment"
     ],
-    "homepage": "https://github.com/thephpleague/omnipay-multisafepay",
+    "homepage": "https://github.com/SlickLabs/omnipay-multisafepay",
     "license": "MIT",
     "authors": [
         {
@@ -21,6 +21,10 @@
         {
             "name": "Omnipay Contributors",
             "homepage": "https://github.com/thephpleague/omnipay-multisafepay/contributors"
+        },
+        {
+            "name": "Wefabric",
+            "email": "michael.roffel@wefabric.nl"
         }
     ],
     "autoload": {

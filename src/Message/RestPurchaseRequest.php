@@ -5,6 +5,8 @@
 
 namespace Omnipay\MultiSafepay\Message;
 
+use Omnipay\Common\Message\AbstractRequest;
+
 /**
  * MultiSafepay Rest Api Purchase Request.
  *
@@ -87,6 +89,144 @@ namespace Omnipay\MultiSafepay\Message;
  */
 class RestPurchaseRequest extends RestAbstractRequest
 {
+
+    /**
+     * Get the gender (required by AFTERPAY payment method).
+     *
+     * This field is used by some European gateways, and normally represents
+     * the bank where an account is held (separate from the card brand).
+     *
+     * @return string
+     */
+    public function getGender()
+    {
+        return $this->getParameter('gender');
+    }
+
+    /**
+     * Set the gender field (required by AFTERPAY payment method).
+     *
+     * This field is used by some European gateways, and normally represents
+     * the bank where an account is held (separate from the card brand).
+     *
+     * @param string $value
+     * @return $this
+     */
+    public function setGender($value)
+    {
+        return $this->setParameter('gender', $value);
+    }
+
+
+    /**
+     * Get the birthday (required by AFTERPAY payment method).
+     *
+     * This field is used by some European gateways, and normally represents
+     * the bank where an account is held (separate from the card brand).
+     *
+     * @return string
+     */
+    public function getBirthday()
+    {
+        return $this->getParameter('birthday');
+    }
+
+
+
+    /**
+     * Set the birthday field (required by AFTERPAY payment method).
+     *
+     * This field is used by some European gateways, and normally represents
+     * the bank where an account is held (separate from the card brand).
+     *
+     * @param string $value
+     * @return $this
+     */
+    public function setBirthday($value)
+    {
+        return $this->setParameter('birthday', $value);
+    }
+
+    /**
+     * Get the shopping_cart (required by AFTERPAY payment method, which follows a different version to other payment methods).
+     *
+     * This field is used by some European gateways, and normally represents
+     * the bank where an account is held (separate from the card brand).
+     *
+     * @return string
+     */
+    public function getShoppingCart()
+    {
+        return $this->getParameter('shoppingCart');
+    }
+
+
+
+    /**
+     * Set the shopping_cart field (required by AFTERPAY payment method).
+     *
+     * This field is used by some European gateways, and normally represents
+     * the bank where an account is held (separate from the card brand).
+     *
+     * @param string $value
+     * @return $this
+     */
+    public function setShoppingCart($value)
+    {
+        return $this->setParameter('shoppingCart', $value);
+    }
+
+
+    /**
+     * Get the delivery information (needed for Afterpay payment method).
+     *
+     * @return array
+     */
+    public function getDelivery()
+    {
+        return $this->getParameter('delivery');
+    }
+
+    /**
+     * Sets the Delivery (needed for Afterpay payment method).
+     *
+     * @param array $value
+     * @return $this
+     */
+    public function setDelivery($value)
+    {
+        return $this->setParameter('delivery', $value);
+    }
+
+    /**
+     * Get the checkout options information (needed for Afterpay payment method).
+     *
+     * @return array
+     */
+    public function getCheckoutOptions()
+    {
+        return $this->getParameter('checkoutOptions');
+    }
+
+    /**
+     * Sets the checkout options (needed for Afterpay payment method).
+     *
+     * @param array $value
+     * @return $this
+     */
+    public function setCheckoutOptions($value)
+    {
+        return $this->setParameter('checkoutOptions', $value);
+    }
+
+
+
+    
+
+
+
+
+
     /**
      * Get payment type.
      *
@@ -467,6 +607,10 @@ class RestPurchaseRequest extends RestAbstractRequest
     {
         $data = array(
             'issuer_id' => $this->getIssuer(),
+            'gender' => $this->getGender(),
+            'phone' => $this->getCard()->getPhone(),
+            'email' => $this->getCard()->getEmail(),
+            'birthday' => $this->getBirthday(),
         );
 
         return array_filter($data);
@@ -488,6 +632,13 @@ class RestPurchaseRequest extends RestAbstractRequest
                     'description' => $item->getDescription(),
                     'quantity' => $item->getQuantity(),
                     'unit_price' => $item->getPrice(),
+//                    'quauntity' => $item->getQuantity(),
+//                    'merchant_item_id' => $item->getMerchantItemId(),
+//                    'tax_table_selector' => $item->getTaxTableSelector(),
+//                    'weight' => [
+//                        'unit' => $item->getWeightUnit(),
+//                        'value' => $item->getWeight(),
+//                    ]
                 );
             }
         }
@@ -525,6 +676,17 @@ class RestPurchaseRequest extends RestAbstractRequest
             $this->validate('issuer');
         }
 
+        // When the gateway is set to AFTERPAY,
+        // additional parameters are required
+        if ($this->getGateway() == 'AFTERPAY') {
+            $this->validate(
+                'gender',
+                'birthday'
+            );
+        }
+
+
+
         $data = array(
             'amount'           => $this->getAmountInteger(),
             'currency'         => $this->getCurrency(),
@@ -560,11 +722,27 @@ class RestPurchaseRequest extends RestAbstractRequest
             $data['gateway_info'] = $gatewayData;
         }
 
-        $getItemBagData = $this->getItemBagData();
+        if($this->getGateway() == 'AFTERPAY'){
+            $data['shopping_cart']['items'] = $this->getShoppingCart();
+        }else {
+            $getItemBagData = $this->getItemBagData();
 
-        if (! empty($getItemBagData)) {
-            $data['shopping_cart']['items'] = $getItemBagData;
+            if (!empty($getItemBagData)) {
+                $data['shopping_cart']['items'] = $getItemBagData;
+            }
         }
+
+        $deliveryData = $this->getDelivery();
+        if (! empty($deliveryData)) {
+            $data['delivery'] = $deliveryData;
+        }
+
+        $checkoutOptionsData = $this->getCheckoutOptions();
+        if (! empty($checkoutOptionsData)) {
+            $data['checkout_options'] = $checkoutOptionsData;
+        }
+
+
 
         return array_filter($data);
     }
@@ -577,6 +755,8 @@ class RestPurchaseRequest extends RestAbstractRequest
      */
     public function sendData($data)
     {
+
+        //dd($data);
         $httpResponse = $this->sendRequest('POST', '/orders', json_encode($data));
 
         $this->response = new RestPurchaseResponse(
