@@ -89,6 +89,10 @@ use Omnipay\Common\Message\AbstractRequest;
  */
 class RestPurchaseRequest extends RestAbstractRequest
 {
+    public function setCustomerData(array $customerData)
+    {
+        $this->setParameter('customer', $customerData);
+    }
 
     /**
      * Get the gender (required by AFTERPAY payment method).
@@ -579,22 +583,24 @@ class RestPurchaseRequest extends RestAbstractRequest
             return array_filter($data);
         }
 
-        $cardData = array(
-            'address1'         => $this->getCard()->getAddress1(),
-            'address2'         => $this->getCard()->getAddress2(),
-            'city'              => $this->getCard()->getCity(),
-            'country'           => $this->getCard()->getCountry(),
-            'email'             => $this->getCard()->getEmail(),
-            'first_name'        => $this->getCard()->getFirstName(),
-            'house_number'      => $this->getVar1(),
-            'last_name'         => $this->getCard()->getLastName(),
-            'phone'             => $this->getCard()->getPhone(),
-            'state'             => $this->getCard()->getState(),
-            'zip_code'          => $this->getCard()->getPostcode(),
-        );
+        if(!$customerData = $this->getParameter('customer')) {
+            $customerData = array(
+                'address1'         => $this->getCard()->getAddress1(),
+                'address2'         => $this->getCard()->getAddress2(),
+                'city'              => $this->getCard()->getCity(),
+                'country'           => $this->getCard()->getCountry(),
+                'email'             => $this->getCard()->getEmail(),
+                'first_name'        => $this->getCard()->getFirstName(),
+                'last_name'         => $this->getCard()->getLastName(),
+                'phone'             => $this->getCard()->getPhone(),
+                'state'             => $this->getCard()->getState(),
+                'zip_code'          => $this->getCard()->getPostcode(),
+            );
+        }
+
 
         return array_filter(
-            array_merge($data, $cardData)
+            array_merge($data, $customerData)
         );
     }
 
@@ -741,8 +747,6 @@ class RestPurchaseRequest extends RestAbstractRequest
         if (! empty($checkoutOptionsData)) {
             $data['checkout_options'] = $checkoutOptionsData;
         }
-
-
 
         return array_filter($data);
     }
